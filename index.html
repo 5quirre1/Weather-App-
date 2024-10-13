@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <meta name="theme-color" content="#3498db">
+   
+    <style>
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #83a4d4, #b6fbff);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background-color: rgba(4, 75, 111, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 32px;
+            color: #333;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #007BFF;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: #0056b3;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button#geoButton {
+            background-color: #28a745;
+            margin-top: 10px;
+        }
+
+        button#geoButton:hover {
+            background-color: #1e7e34;
+        }
+
+        .weather-info {
+            margin-top: 20px;
+        }
+
+        .weather-info h2 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #fbf5f5;
+        }
+
+        .weather-info p {
+            font-size: 18px;
+            margin: 5px 0;
+            color: #fdf9f9;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        .loading {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #007BFF;
+        }
+
+        .weather-icon {
+            width: 100px;
+            height: 100px;
+        }
+
+        
+        .forecast {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .forecast-day {
+            background-color: rgba(89, 179, 239, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            width: 22%;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .forecast-day h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .forecast-day img {
+            width: 50px;
+            height: 50px;
+        }
+
+        .forecast-day p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #ffffff;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            input[type="text"] {
+                width: 100%;
+            }
+
+            button {
+                width: 100%;
+                padding: 10px;
+            }
+
+            .weather-icon {
+                width: 80px;
+                height: 80px;
+            }
+
+            .forecast-day {
+                width: 45%;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .forecast-day {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather App</h1>
+        <input type="text" id="locationInput" placeholder="Enter a city.">
+        <button id="searchButton">Search</button>
+        <button id="geoButton">Use My Location</button>
+        <div class="weather-info">
+            <img id="weatherIcon" class="weather-icon" src="" alt="" style="display: none;">
+            <h2 id="location"></h2>
+            <p id="temperature"></p>
+            <p id="description"></p>
+            <p id="humidity"></p>
+            <p id="wind"></p>
+            <p id="errorMessage" class="error"></p>
+            <p id="loading" class="loading" style="display: none;">Loading...</p>
+        </div>
+        <div class="forecast" id="forecast"></div>
+    </div>
+    <script>
+        const apiKey = '3da8bb24af6562a8a1a9d2c4464b5f8e';
+        const currentWeatherUrl = 'https://api.openweathermap.org/data/2.5/weather';
+        const forecastUrl = 'https://api.openweathermap.org/data/2.5/forecast';
+
+        // Element selectors
+        const locationInput = document.getElementById('locationInput');
+        const searchButton = document.getElementById('searchButton');
+        const geoButton = document.getElementById('geoButton');
+        const locationElement = document.getElementById('location');
+        const temperatureElement = document.getElementById('temperature');
+        const descriptionElement = document.getElementById('description');
+        const humidityElement = document.getElementById('humidity');
+        const windElement = document.getElementById('wind');
+        const errorMessage = document.getElementById('errorMessage');
+        const loadingElement = document.getElementById('loading');
+        const weatherIcon = document.getElementById('weatherIcon');
+        const forecastContainer = document.getElementById('forecast');
+
+       
+        searchButton.addEventListener('click', () => {
+            const location = locationInput.value.trim();
+            if (location) {
+                fetchWeather({ q: location });
+            } else {
+                displayError('Please enter a city.');
+            }
+        });
+
+        locationInput.addEventListener('keyup', (event) => {
+            if (event.key === 'Enter') {
+                searchButton.click();
+            }
+        });
+
+        geoButton.addEventListener('click', () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const { latitude, longitude } = position.coords;
+                        fetchWeather({ lat: latitude, lon: longitude });
+                    },
+                    handleGeolocationError
+                );
+            } else {
+                displayError('Geolocation is not supported by your browser.');
+            }
+        });
+
+        
+        function handleGeolocationError(error) {
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    displayError('User denied the request for Geolocation.');
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    displayError('Location information is unavailable.');
+                    break;
+                case error.TIMEOUT:
+                    displayError('The request to get user location timed out.');
+                    break;
+                case error.UNKNOWN_ERROR:
+                    displayError('An unknown error occurred.');
+                    break;
+            }
+        }
+
+        
+        async function fetchWeather(params) {
+            let url = `${currentWeatherUrl}?appid=${apiKey}&units=imperial`;
+            let forecastApiUrl = `${forecastUrl}?appid=${apiKey}&units=imperial`;
+
+            if (params.q) {
+                url += `&q=${encodeURIComponent(params.q)}`;
+                forecastApiUrl += `&q=${encodeURIComponent(params.q)}`;
+            } else if (params.lat && params.lon) {
+                url += `&lat=${params.lat}&lon=${params.lon}`;
+                forecastApiUrl += `&lat=${params.lat}&lon=${params.lon}`;
+            }
+
+            showLoading();
+            clearWeatherInfo();
+
+            try {
+                const [weatherResponse, forecastResponse] = await Promise.all([
+                    fetch(url),
+                    fetch(forecastApiUrl)
+                ]);
+
+                if (!weatherResponse.ok) {
+                    const errorData = await weatherResponse.json();
+                    throw new Error(errorData.message || 'Error fetching current weather data');
+                }
+
+                if (!forecastResponse.ok) {
+                    const errorData = await forecastResponse.json();
+                    throw new Error(errorData.message || 'Error fetching forecast data');
+                }
+
+                const weatherData = await weatherResponse.json();
+                const forecastData = await forecastResponse.json();
+
+                hideLoading();
+                displayWeather(weatherData);
+                displayForecast(forecastData);
+            } catch (error) {
+                hideLoading();
+                console.error('Error fetching weather data:', error);
+                displayError(`Unable to retrieve weather data. ${error.message}`);
+            }
+        }
+
+        
+        function displayWeather(data) {
+            const { name, sys, main, weather, wind } = data;
+            locationElement.textContent = `${name}, ${sys.country}`;
+            temperatureElement.textContent = `Temperature: ${Math.round(main.temp)}°F`;
+            const descriptions = weather.map(w => capitalizeFirstLetter(w.description)).join(', ');
+            descriptionElement.textContent = `Condition: ${descriptions}`;
+            humidityElement.textContent = `Humidity: ${main.humidity}%`;
+            windElement.textContent = `Wind Speed: ${wind.speed} mph`;
+
+            const iconCode = weather[0].icon;
+            weatherIcon.src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+            weatherIcon.alt = weather[0].description;
+            weatherIcon.style.display = 'block';
+        }
+
+     
+        function displayForecast(data) {
+            
+            forecastContainer.innerHTML = '';
+
+            
+            const dailyData = {};
+
+            data.list.forEach(entry => {
+                const date = new Date(entry.dt_txt);
+                const day = date.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+
+               
+                if (!dailyData[day] && date.getHours() === 12) {
+                    dailyData[day] = entry;
+                }
+            });
+
+           
+            const days = Object.keys(dailyData).slice(0, 4);
+
+            days.forEach(day => {
+                const entry = dailyData[day];
+                const { main, weather } = entry;
+
+                const forecastDay = document.createElement('div');
+                forecastDay.classList.add('forecast-day');
+
+                const dayName = document.createElement('h3');
+                dayName.textContent = day;
+
+                const icon = document.createElement('img');
+                icon.src = `https://openweathermap.org/img/wn/${weather[0].icon}@2x.png`;
+                icon.alt = weather[0].description;
+
+                const temp = document.createElement('p');
+                temp.textContent = `Temp: ${Math.round(main.temp)}°F`;
+
+                const desc = document.createElement('p');
+                desc.textContent = capitalizeFirstLetter(weather[0].description);
+
+                forecastDay.appendChild(dayName);
+                forecastDay.appendChild(icon);
+                forecastDay.appendChild(temp);
+                forecastDay.appendChild(desc);
+
+                forecastContainer.appendChild(forecastDay);
+            });
+        }
+
+        
+        function displayError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            loadingElement.style.display = 'none';
+        }
+
+        
+        function showLoading() {
+            if (loadingElement) {
+                loadingElement.style.display = 'block';
+            }
+            if (errorMessage) {
+                errorMessage.style.display = 'none';
+            }
+            clearWeatherInfoDisplay();
+            if (forecastContainer) {
+                forecastContainer.innerHTML = '';
+            }
+        }
+
+        
+        function hideLoading() {
+            if (loadingElement) {
+                loadingElement.style.display = 'none';
+            }
+        }
+
+       
+        function clearWeatherInfo() {
+            if (locationElement) locationElement.textContent = '';
+            if (temperatureElement) temperatureElement.textContent = '';
+            if (descriptionElement) descriptionElement.textContent = '';
+            if (humidityElement) humidityElement.textContent = '';
+            if (windElement) windElement.textContent = '';
+            if (weatherIcon) {
+                weatherIcon.style.display = 'none';
+                weatherIcon.src = '';
+                weatherIcon.alt = '';
+            }
+            if (errorMessage) {
+                errorMessage.textContent = '';
+                errorMessage.style.display = 'none';
+            }
+            if (forecastContainer) forecastContainer.innerHTML = '';
+        }
+
+        
+        function clearWeatherInfoDisplay() {
+            if (locationElement) locationElement.textContent = '';
+            if (temperatureElement) temperatureElement.textContent = '';
+            if (descriptionElement) descriptionElement.textContent = '';
+            if (humidityElement) humidityElement.textContent = '';
+            if (windElement) windElement.textContent = '';
+            if (weatherIcon) {
+                weatherIcon.style.display = 'none';
+                weatherIcon.src = '';
+                weatherIcon.alt = '';
+            }
+            
+        }
+
+      
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+    </script>
+</body>
+</html>
