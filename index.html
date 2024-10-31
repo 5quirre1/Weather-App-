@@ -15,8 +15,10 @@
         }
 
         body {
+            background-image: url("https://images7.alphacoders.com/678/678078.jpg");
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(to right, #83a4d4, #b6fbff);
+            background-repeat: no-repeat;
+            background-size: cover;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -37,7 +39,7 @@
         h1 {
             margin-bottom: 20px;
             font-size: 32px;
-            color: #333;
+            color: #0aa1ed;
         }
 
         input[type="text"] {
@@ -111,6 +113,7 @@
         .weather-icon {
             width: 100px;
             height: 100px;
+            margin-left: 170px;
         }
 
         
@@ -169,6 +172,7 @@
             .weather-icon {
                 width: 80px;
                 height: 80px;
+                margin-left: 60px;
             }
 
             .forecast-day {
@@ -185,8 +189,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>Weather App</h1>
-        <input type="text" id="locationInput" placeholder="Enter a city.">
+        <h1>Simple Weather!!!</h1>
+        <input type="text" id="locationInput" placeholder="Enter a city (ex: Hell, Michigan)">
         <button id="searchButton">Search</button>
         <button id="geoButton">Use My Location</button>
         <div class="weather-info">
