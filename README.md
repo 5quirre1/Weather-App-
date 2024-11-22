@@ -2,4 +2,5 @@
 
 This was really just testing my skills and stuff :fire: so uauauauauuauau
 
-![image](https://github.com/user-attachments/assets/b8c04aff-653c-45c5-91e4-ae113bc865c5)
+![image](https://github.com/user-attachments/assets/dcfb8623-2b14-4678-9ae7-703923822e6f)
+
